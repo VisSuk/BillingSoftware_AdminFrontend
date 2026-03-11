@@ -123,12 +123,12 @@ const AppRouter: React.FC = () => {
     <Routes>
       <Route
         path="/login"
-        element={!isAuthenticated ? <Login onLoginSuccess={handleLogin} /> : <Navigate to="/" />}
+        element={!isAuthenticated ? <Login onLoginSuccess={handleLogin} /> : <Navigate to="/" replace/>}
       />
 
       <Route
         path="/"
-        element={isAuthenticated ? <Layout user={currentUser} setUser={setCurrentUser} plans={plans} onLogout={handleLogout} /> : <Navigate to="/login" />}
+        element={isAuthenticated ? <Layout user={currentUser} setUser={setCurrentUser} plans={plans} onLogout={handleLogout} /> : <Navigate to="/login" replace />}
       >
         <Route index element={<Dashboard clients={clients} invoices={invoices} />} />
         <Route
@@ -151,7 +151,7 @@ const AppRouter: React.FC = () => {
         <Route path='payment-error' element={<Paymenterror />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route path="*" element={<Navigate to="/" replace/>} />
     </Routes>
   );
 };

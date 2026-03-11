@@ -23,10 +23,10 @@ interface SidebarProps {
   user: User;
   setUser: React.Dispatch<React.SetStateAction<User>>;
   plans: SubscriptionPlan[];
-  // onLogout: () => void;
+  onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ user, setUser, plans }) => {
+const Sidebar: React.FC<SidebarProps> = ({ user, setUser, plans, onLogout }) => {
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -50,9 +50,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user, setUser, plans }) => {
     setIsLoggingOut(true);
     // Simulate disconnecting from the platform node
     await new Promise(resolve => setTimeout(resolve, 800));
-    localStorage.removeItem("admin_token")
-    localStorage.removeItem("admin_user")
-    navigate("/")
+
+    onLogout()
   };
 
   const handleOpenSettings = () => {
