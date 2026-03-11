@@ -52,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, setUser, plans }) => {
     await new Promise(resolve => setTimeout(resolve, 800));
     localStorage.removeItem("admin_token")
     localStorage.removeItem("admin_user")
-    navigate("/login")
+    navigate("/")
   };
 
   const handleOpenSettings = () => {
