@@ -27,7 +27,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           
           <LoginForm onLoginSuccess={onLoginSuccess} />
           
-          <div className="mt-10 pt-6 border-t border-slate-50">
+
+          {/* Demo Credentials */}
+          {/* <div className="mt-10 pt-6 border-t border-slate-50">
             <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100">
               <div className="flex items-center gap-2 mb-3 text-sky-600">
                 <Info size={16} />
@@ -47,7 +49,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             <p className="mt-4 text-[10px] text-center font-bold text-slate-300 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
               <ShieldCheck size={12} /> Encrypted Session
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -82,3 +82,11 @@ export const getDuePaymentsAPI = async () => {
 export const getPaidPaymentsAPI = async () => {
   return await commonApi("GET",`${serverUrl}/payments/paid`,{},getAuthHeader())
 }
+
+export const createStripeCheckoutAPI = (subId: string) => {
+  return commonApi("POST",`${serverUrl}/stripe-checkout/${subId}`,{},getAuthHeader())
+}
+
+export const confirmOnlinePaymentAPI = (subId: string) => {
+  return commonApi("POST",`${serverUrl}/confirm-online/${subId}`,{},getAuthHeader())
+}

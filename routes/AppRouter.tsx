@@ -11,6 +11,9 @@ import AutopayProcessor from '../pages/AutopayProcessor';
 import Login from '../pages/Login';
 import { Client, SubscriptionPlan, Invoice, User } from '../types';
 import { fetchClientsAPI, getAllPaymentsAPI, plansAPI } from '@/services/allApi';
+import CashPayOnline from '@/pages/CashPayOnline';
+import Paymentsuccess from '@/pages/Paymentsuccess';
+import Paymenterror from '@/pages/Paymenterror';
 
 const AppRouter: React.FC = () => {
   // Use localStorage to persist login state for the demo
@@ -141,7 +144,11 @@ const AppRouter: React.FC = () => {
           element={<Invoices invoices={invoices} setInvoices={setInvoices} clients={clients} />}
         />
         <Route path="cash-pay" element={<CashPayByHand clients={clients} refreshClients={fetchCompanyClients}  refreshInvoices={fetchInvoices} />} />
-        <Route path="autopay" element={<AutopayProcessor clients={clients} setClients={setClients} />} />
+        {/* <Route path="autopay" element={<AutopayProcessor clients={clients} setClients={setClients} />} /> */}
+        <Route path='online-pay' element={<CashPayOnline clients={clients} refreshClients={fetchCompanyClients}  refreshInvoices={fetchInvoices}/>}></Route>
+
+        <Route path='payment-success' element={<Paymentsuccess refreshClients={fetchCompanyClients}  refreshInvoices={fetchInvoices} />} />
+        <Route path='payment-error' element={<Paymenterror />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

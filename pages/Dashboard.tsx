@@ -86,6 +86,8 @@ const StatCard: React.FC<{
 const Dashboard: React.FC<DashboardProps> = ({ clients, invoices }) => {
   const [activeModal, setActiveModal] = useState<'revenue' | 'clients' | 'due' | 'cash' | null>(null);
 
+  const now = new Date()
+
   console.log("CLIENTS: ", clients)
   console.log("INVOICES: ", invoices)
 
@@ -100,17 +102,17 @@ const Dashboard: React.FC<DashboardProps> = ({ clients, invoices }) => {
   ];
 
 const onlinePayments = useMemo(
-  () => invoices.filter(i => i.paymentMethod === "online" && i.status === "Paid"),
+  () => invoices.filter(i => i.paymentMethod === "online" && i.status === "Paid" && new Date(i.expiryDate) > now),
   [invoices]
 )
-
+  console.log("ONLINE PAYMENTS: ", onlinePayments)
 const cashPayments = useMemo(
-  () => invoices.filter(i => i.paymentMethod === "cash" && i.status === "Paid"),
+  () => invoices.filter(i => i.paymentMethod === "cash" && i.status === "Paid" && new Date(i.expiryDate) > now),
   [invoices]
 )
   console.log("CASH PAYMENTS: ", cashPayments)
-  const onlineRevenue = useMemo(() => onlinePayments.reduce((acc, i) => acc + i.amount, 0), [onlinePayments])
-  const cashRevenue = useMemo(() => cashPayments.reduce((acc, i) => acc + i.amount, 0), [cashPayments])
+  const onlineRevenue = useMemo(() => onlinePayments.reduce((acc, i) => acc + i.amount, 0))
+  const cashRevenue = useMemo(() => cashPayments.reduce((acc, i) => acc + i.amount, 0))
 const pendingClients = useMemo(
   () => clients.filter(client => client.status === "pending"),
   [clients]

@@ -11,7 +11,10 @@ import {
   LogOut,
   Settings,
   ChevronUp,
-  Loader2
+  Loader2,
+  SendToBack,
+  MousePointerClick,
+  HandCoins
 } from 'lucide-react';
 import { User, SubscriptionPlan } from '../types';
 import ProfileSettingsModal from './ProfileSettingsModal';
@@ -38,8 +41,9 @@ const Sidebar: React.FC<SidebarProps> = ({ user, setUser, plans, onLogout }) => 
   ];
 
   const aiTools = [
-    { name: 'Cash Pay By Hand', path: '/cash-pay', icon: Send },
-    { name: 'Autopay Processor', path: '/autopay', icon: Cpu },
+    { name: 'Cash Pay By Hand', path: '/cash-pay', icon: HandCoins },
+    // { name: 'Autopay Processor', path: '/autopay', icon: Cpu },
+    { name: 'Online Payment', path:'/online-pay', icon: MousePointerClick}
   ];
 
   const handleLogoutAction = async () => {
@@ -93,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, setUser, plans, onLogout }) => 
           ))}
 
           <div className="pt-6 pb-2 px-3">
-            <p className="text-[10px] font-black text-sky-500 uppercase tracking-[0.2em]">AI TOOLS</p>
+            <p className="text-[10px] font-black text-sky-500 uppercase tracking-[0.2em]">PAYMENT OPTIONS</p>
           </div>
 
           {aiTools.map((item) => (

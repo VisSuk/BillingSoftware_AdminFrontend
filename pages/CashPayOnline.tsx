@@ -1,31 +1,36 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from "react-router-dom"
-import { Cpu, ChevronDown, CheckCircle2 } from 'lucide-react'
-import { Client } from '../types'
+import { Cpu, ChevronDown } from 'lucide-react'
+import { Client } from '@/types'
+
 import {
-  markSubscriptionPaidAPI,
+  createStripeCheckoutAPI,
   getPaidPaymentsAPI
 } from '@/services/allApi'
 
-interface CashPayProps {
+interface OnlinePayProps {
   clients: Client[]
   refreshClients: () => Promise<void>
   refreshInvoices: () => Promise<void>
 }
 
-const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refreshInvoices }) => {
+const CashPayOnline: React.FC<OnlinePayProps> = ({
+  clients,
+  refreshClients,
+  refreshInvoices
+}) => {
 
   const [selectedClientId, setSelectedClientId] = useState('')
   const [amount, setAmount] = useState<number | ''>('')
   const [isUpdating, setIsUpdating] = useState(false)
-  const [success, setSuccess] = useState(false)
 
   const [payments, setPayments] = useState<any[]>([])
-  console.log("PAYMENTS: ", payments)
+  console.log(payments)
 
   const [searchParams] = useSearchParams()
   const subId = searchParams.get("subId")
-  console.log("SUB ID FROM URL:", subId)
+
+  console.log(clients)
 
   const selectedClient = useMemo(
     () => clients.find(c => c.id === selectedClientId) || null,
@@ -34,9 +39,16 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
 
   const fetchPayments = async () => {
     try {
+
       const res = await getPaidPaymentsAPI()
-      setPayments(res.data)
-    } catch (err) {
+
+      const onlinePayments = res.data.filter(
+        (p: any) => p.paymentMethod === "online"
+      )
+
+      setPayments(onlinePayments)
+
+    } catch {
       console.log("Failed to fetch payments")
     }
   }
@@ -46,19 +58,22 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
   }, [clients])
 
   useEffect(() => {
+
     if (selectedClient) {
       setAmount(selectedClient.price)
     } else {
       setAmount('')
     }
+
   }, [selectedClient])
 
   useEffect(() => {
 
     if (!subId) return
-    console.log("URL SUB ID:", subId)
-    const client = clients.find(c => c.subscriptionId === String(subId))
-    console.log("MATCHED CLIENT:", client)
+
+    const client = clients.find(
+      c => String(c.subscriptionId) === String(subId)
+    )
 
     if (client) {
       setSelectedClientId(client.id)
@@ -67,7 +82,8 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
 
   }, [subId, clients])
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleOnlinePayment = async (e: React.FormEvent) => {
+
     e.preventDefault()
 
     if (!selectedClient) return
@@ -76,25 +92,16 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
 
       setIsUpdating(true)
 
-      const targetSubId = subId || selectedClient?.subscriptionId
+      const res = await createStripeCheckoutAPI(
+        selectedClient.subscriptionId
+      )
 
-      if (!targetSubId) return
-
-      await markSubscriptionPaidAPI(targetSubId)
-
-      setSuccess(true)
-
-      setTimeout(() => setSuccess(false), 2500)
-
-      setSelectedClientId('')
-      setAmount('')
-
-      await refreshClients()
-      await refreshInvoices()
-      await fetchPayments()
+      window.location.href = res.data.url
 
     } catch (err: any) {
-      console.log("Payment error:", err.response?.data)
+
+      console.log("Stripe payment error:", err.response?.data)
+
     } finally {
 
       setIsUpdating(false)
@@ -105,21 +112,23 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-      {/* LEFT SIDE — CASH PAYMENT FORM */}
+      {/* LEFT SIDE — ONLINE PAYMENT FORM */}
 
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl p-10">
 
         <div className="mb-8">
+
           <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100">
-            Cash Payment
+            Online Payment
           </h2>
 
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Record manual cash payments.
+            Pay subscriptions securely using Stripe.
           </p>
+
         </div>
 
-        <form className="space-y-6" onSubmit={handleUpdate}>
+        <form className="space-y-6" onSubmit={handleOnlinePayment}>
 
           {/* CLIENT SELECT */}
 
@@ -155,6 +164,7 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
               />
 
             </div>
+
           </div>
 
 
@@ -200,25 +210,18 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
           <button
             type="submit"
             disabled={!selectedClientId || !amount || isUpdating}
-            className={`w-full font-black py-4 rounded-2xl flex items-center justify-center gap-3 transition-all text-xs uppercase tracking-widest ${success
-              ? "bg-emerald-500 text-white"
-              : "bg-sky-500 hover:bg-sky-600 text-white"
-              }`}
+            className="w-full font-black py-4 rounded-2xl flex items-center justify-center gap-3 transition-all text-xs uppercase tracking-widest bg-sky-500 hover:bg-sky-600 text-white"
           >
 
             {isUpdating ? (
               <Cpu size={20} className="animate-spin" />
-            ) : success ? (
-              <CheckCircle2 size={20} />
             ) : (
               <Cpu size={20} />
             )}
 
             {isUpdating
-              ? "Updating..."
-              : success
-                ? "Payment Recorded"
-                : "Record Payment"}
+              ? "Redirecting to Stripe..."
+              : "Pay Online"}
 
           </button>
 
@@ -227,13 +230,12 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
       </div>
 
 
-
-      {/* RIGHT SIDE — CASH PAYMENT HISTORY */}
+      {/* RIGHT SIDE — ONLINE PAYMENT HISTORY */}
 
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl p-10">
 
         <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-6">
-          Cash Payments
+          Online Payments
         </h2>
 
         <div className="overflow-auto">
@@ -254,7 +256,7 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
 
             <tbody>
 
-              {payments.map((p: any) => p.paymentMethod == 'cash' && (
+              {payments.map((p: any) => (
 
                 <tr key={p._id} className="border-b border-slate-100 dark:border-slate-800">
 
@@ -289,4 +291,4 @@ const CashPayByHand: React.FC<CashPayProps> = ({ clients, refreshClients, refres
   )
 }
 
-export default CashPayByHand
+export default CashPayOnline

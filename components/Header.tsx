@@ -81,7 +81,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="h-16 bg-transparent flex items-center justify-end px-8 gap-6 relative">
-      <div className="relative w-64">
+      {/* <div className="relative w-64">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
           <Search size={18} className="text-slate-400 dark:text-slate-500" />
         </div>
@@ -93,7 +93,7 @@ const Header: React.FC = () => {
         <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
           <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 px-1 rounded">⌘ K</span>
         </div>
-      </div>
+      </div> */}
       
       <button 
         onClick={toggleDarkMode}
