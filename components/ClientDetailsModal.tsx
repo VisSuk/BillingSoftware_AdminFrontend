@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  X, Pause, Play, Ban, RotateCcw, Mail, Building2, Calendar, 
+import {
+  X, Pause, Play, Ban, RotateCcw, Mail, Building2, Calendar,
   CreditCard, RefreshCw, Phone, DollarSign, CheckCircle2,
   Plus, ArrowUpRight, ArrowDownLeft, AlertTriangle, User as UserIcon,
   Users, MessageSquare, ShieldCheck, Activity, Settings, AlertCircle
@@ -9,6 +9,8 @@ import {
 import { Client, Interaction, SubscriptionPlan, ActivityLog } from '../types';
 import EditClientModal from './EditClientModal';
 import LogInteractionModal from './LogInteractionModal';
+import { cancelSubscriptionAPI, pauseSubscriptionAPI, resumeSubscriptionAPI } from '@/services/allApi';
+import { useNavigate } from 'react-router-dom';
 
 interface ClientDetailsModalProps {
   isOpen: boolean;
@@ -16,12 +18,17 @@ interface ClientDetailsModalProps {
   client: Client;
   onUpdate: (client: Client) => void;
   plans: SubscriptionPlan[];
+  refreshClients: () => void
 }
 
-const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({ isOpen, onClose, client, onUpdate, plans }) => {
+const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({ isOpen, onClose, client, onUpdate, plans, refreshClients }) => {
+
+  const navigate = useNavigate()
+
   const [activeTab, setActiveTab] = useState<'Overview' | 'History' | 'Activity'>('Overview');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isRestartMenuOpen, setIsRestartMenuOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -29,8 +36,23 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({ isOpen, onClose
     onUpdate({ ...client, autopayEnabled: !client.autopayEnabled });
   };
 
-  const handleStatusToggle = (newStatus: Client['status']) => {
-    onUpdate({ ...client, status: newStatus });
+  // const handleStatusToggle = (newStatus: Client['status']) => {
+  //   onUpdate({ ...client, status: newStatus });
+  // };
+
+  const handlePause = async () => {
+    await pauseSubscriptionAPI(client.subscriptionId);
+    refreshClients();
+  };
+
+  const handleResume = async () => {
+    await resumeSubscriptionAPI(client.subscriptionId);
+    refreshClients();
+  };
+
+  const handleCancel = async () => {
+    await cancelSubscriptionAPI(client.subscriptionId);
+    refreshClients();
   };
 
   const handleLogInteraction = (interaction: Interaction) => {
@@ -90,20 +112,69 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({ isOpen, onClose
                   </div>
                 </div>
               </div>
-              <div className="flex gap-4">
-                {client.status !== 'Cancelled' ? (
+              <div className="flex gap-4 w-1/3 justify-end">
+                {client.status !== 'cancelled' ? (
                   <>
-                    <button onClick={() => handleStatusToggle(client.status === 'paused' ? 'active' : 'paused')} className="flex items-center gap-2 px-6 py-3 bg-white border border-sky-100 rounded-2xl text-xs font-black shadow-sm">
-                      {client.status === 'Paused' ? <><Play size={16} fill="currentColor" /> Resume</> : <><Pause size={16} fill="currentColor" /> Pause Account</>}
-                    </button>
-                    <button onClick={() => handleStatusToggle('cancelled')} className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-red-500/20">
-                      <Ban size={16} /> Terminate
+                    {client.status === 'paused' ? (
+                      <button
+                        onClick={handleResume}
+                        className="flex items-center gap-2 px-6 py-3 bg-white border border-sky-100 rounded-2xl text-xs font-black shadow-sm"
+                      >
+                        <Play size={16} fill="currentColor" /> Resume
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handlePause}
+                        className="flex items-center gap-2 px-6 py-3 bg-white border border-sky-100 rounded-2xl text-xs font-black shadow-sm"
+                      >
+                        <Pause size={16} fill="currentColor" /> Pause
+                      </button>
+                    )}
+                    <button
+                      onClick={handleCancel}
+                      className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-red-500/20"
+                    >
+                      <Ban size={16} /> Cancel
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => handleStatusToggle('active')} className="px-8 py-3 bg-emerald-500 text-white rounded-2xl text-xs font-black">
-                    <RotateCcw size={16} /> Reactivate
-                  </button>
+                  <div className="relative w-1/2">
+
+                    <button
+                      onClick={() => setIsRestartMenuOpen(prev => !prev)}
+                      className="px-6 py-5 bg-emerald-500 text-white rounded-2xl text-xs font-black w-full flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw size={16} />
+                      Restart
+                    </button>
+
+                    {isRestartMenuOpen && (
+                      <div className="absolute top-full mt-2 flex flex-col bg-white border border-slate-200 shadow-md rounded-lg z-50 w-full">
+
+                        <button
+                          onClick={() => {
+                            onClose();
+                            navigate(`/cash-pay?subId=${client.subscriptionId}`);
+                          }}
+                          className="px-4 py-2 text-xs hover:bg-slate-100 text-left"
+                        >
+                          Cash
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            onClose();
+                            navigate(`/online-pay?subId=${client.subscriptionId}`);
+                          }}
+                          className="px-4 py-2 text-xs hover:bg-slate-100 text-left"
+                        >
+                          Online
+                        </button>
+
+                      </div>
+                    )}
+
+                  </div>
                 )}
               </div>
             </div>
@@ -113,7 +184,7 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({ isOpen, onClose
                 { id: 'History', label: 'Communications' },
                 { id: 'Activity', label: 'System Log' }
               ].map(tab => (
-                <button 
+                <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`px-8 py-3 font-black text-[11px] rounded-2xl uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-[#d1e9f6] text-sky-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
@@ -164,7 +235,7 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({ isOpen, onClose
                             <p className="text-[15px] font-bold">{client.autopayEnabled ? 'Enabled' : 'Disabled'}</p>
                           </div>
                         </div>
-                        <button 
+                        <button
                           onClick={handleToggleAutopay}
                           disabled={client.status === 'Cancelled'}
                           className={`w-14 h-7 rounded-full flex items-center px-1 transition-all ${client.autopayEnabled ? 'bg-[#0ea5e9]' : 'bg-slate-200'}`}

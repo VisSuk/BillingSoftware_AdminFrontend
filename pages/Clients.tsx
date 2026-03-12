@@ -207,7 +207,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, setClients, plans, refreshCl
 
                 <tr
                   key={client.id}
-                  className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer group"
+                  className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
                   onClick={() => handleClientClick(client)}
                 >
 
@@ -319,14 +319,14 @@ const Clients: React.FC<ClientsProps> = ({ clients, setClients, plans, refreshCl
                       )}
 
                       {client.status === "cancelled" && (
-                        <div className="relative group">
+                        <div className="relative group inline-block">
 
                           <button className="bg-purple-500 hover:bg-purple-600 text-white text-xs px-3 py-1 rounded-lg flex items-center gap-1">
                             Restart
                             <ChevronDown size={12} />
                           </button>
 
-                          <div className="absolute hidden group-hover:flex flex-col bg-white border border-slate-200 shadow-md rounded-lg mt-1 z-50">
+                          <div className="absolute left-0 top-full pt-1 hidden group-hover:flex flex-col bg-white border border-slate-200 shadow-md rounded-lg z-50 min-w-[110px]">
 
                             <button
                               onClick={() =>
@@ -398,6 +398,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, setClients, plans, refreshCl
           client={selectedClient}
           onUpdate={handleUpdateClient}
           plans={plans}
+          refreshClients={refreshClients}
         />
       )}
       {isFindClientModalOpen && (
